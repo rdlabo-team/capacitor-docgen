@@ -1,34 +1,21 @@
 # @rdlabo/capacitor-docgen
 
-`@rdlabo/capacitor-docgen` is an independently maintained enhancement fork of Ionic's [`@capacitor/docgen`](https://github.com/ionic-team/capacitor-docgen). It keeps the upstream CLI, Markdown placeholders, output helpers, and exported functions, while extending the parser result and generated content with interface inheritance.
+Generate Capacitor plugin documentation that includes members inherited through TypeScript
+`extends`. Independently maintained fork of Ionic's
+[`@capacitor/docgen`](https://github.com/ionic-team/capacitor-docgen).
 
-The comparison in these docs is pinned to `@rdlabo/capacitor-docgen@0.4.1` and upstream `@capacitor/docgen@0.3.1`, the current npm releases. It does not imply that the fork is an official Ionic package.
-
-## Install
-
-```sh
-npm install --save-dev @rdlabo/capacitor-docgen
-```
-
-Use the same `docgen` command and flags as upstream:
+## Try it in a small sandbox
 
 ```sh
-npx docgen --api MyPlugin --output-readme README.md --output-json dist/docs.json
+mkdir docgen-demo
+cd docgen-demo
+npm init -y
+npm install --save-dev @rdlabo/capacitor-docgen@0.4.1
 ```
 
-The input README must already contain the placeholders that docgen updates:
+Do not install upstream `@capacitor/docgen` in the same project; both publish the `docgen` binary.
 
-```md
-<docgen-index></docgen-index>
-
-<docgen-api></docgen-api>
-```
-
-Do not install both packages as direct dependencies in one project: both publish the `docgen` binary. Choose the fork when inherited interface members must appear in generated documentation.
-
-## Inheritance enhancement
-
-Upstream records only the members written directly in an interface. The fork also reads a TypeScript `extends` clause and appends methods and properties from the resolved base interface.
+Create `src/definitions.ts`:
 
 ```ts
 export interface SharedOptions {
@@ -44,18 +31,39 @@ export interface MyPlugin {
 }
 ```
 
-With the fork, the generated `CreateOptions` table contains both `value` and `requestId`. The fork can also resolve a base named through a type alias when that alias points to an interface.
+Create `tsconfig.json`:
 
-The released fork README says to add an `@extends` JSDoc tag. That instruction is stale for v0.4.1: the implementation reads the TypeScript heritage clause directly and does not use the tag to resolve inheritance. Write valid TypeScript `extends`; an `@extends` tag is not required.
+```json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "strict": true
+  },
+  "files": ["src/definitions.ts"]
+}
+```
 
-See [Differences from upstream](./docs/upstream-differences.md) for the exact changed surfaces and current limitations.
+Create `README.md` with the placeholders that docgen updates:
 
-## Pinned sources
+```md
+<docgen-index></docgen-index>
 
-- [Fork parser v0.4.1](https://github.com/rdlabo-dev/capacitor-docgen/blob/v0.4.1/src/parse.ts)
-- [Fork public types v0.4.1](https://github.com/rdlabo-dev/capacitor-docgen/blob/v0.4.1/src/types.ts)
-- [Upstream parser v0.3.1](https://github.com/ionic-team/capacitor-docgen/blob/v0.3.1/src/parse.ts)
-- [Upstream public types v0.3.1](https://github.com/ionic-team/capacitor-docgen/blob/v0.3.1/src/types.ts)
+<docgen-api></docgen-api>
+```
+
+Run:
+
+```sh
+npx docgen --project tsconfig.json --api MyPlugin --output-readme README.md --output-json dist/docs.json
+```
+
+The generated `CreateOptions` documentation includes both `value` and `requestId`. Edit the
+TypeScript interfaces or JSDoc to change generated content; prose outside the markers stays.
+Re-run the same command after edits.
+
+For an existing plugin workflow, you can add a `package.json` script such as
+`"docgen": "docgen --api MyPlugin --output-readme README.md"`. It is optional for this sandbox.
 
 ## Documentation
 
